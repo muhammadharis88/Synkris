@@ -1,0 +1,115 @@
+"use client";
+
+import { toast } from "sonner";
+import {
+  LiveblocksProvider,
+  RoomProvider,
+  ClientSideSuspense,
+} from "@liveblocks/react/suspense";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import { useParams } from "next/navigation";
+
+import { FullscreenLoader } from "@/components/fullscreen-loader";
+import { LEFT_MARGIN_DEFAULT, RIGHT_MARGIN_DEFAULT } from "@/constants/margins";
+
+import { getUsers, getDocuments } from "./actions";
+import { Id } from "../../../../convex/_generated/dataModel";
+
+type User = { id: string; name: string; avatar: string, color: string };
+
+export function Room({ children }: { children: ReactNode }) {
+    const params = useParams();
+
+    const [users, setUsers] = useState<User[]>([]);
+
+    const fetchUsers = useMemo(
+      () => async () => {
+        try {
+          const list = await getUsers();
+          setUsers(list || []);
+        } catch (error) {
+          toast.error(`Failed to fetch users ${error}`);
+        }
+      },
+      [],
+    );
+
+    useEffect(() => {
+      fetchUsers();
+    }, [fetchUsers]);
+
+  return (
+    <LiveblocksProvider 
+      throttle={16}
+      authEndpoint={async () => {
+        const endpoint = "/api/liveblocks-auth";
+        const room = params.documentId as string;
+
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ room }),
+        });
+
+        return await response.json();
+      }}
+      resolveUsers={({ userIds }) => {
+        const resolved = userIds.map((userId) => {
+          const user = users.find((u) => u.id === userId);
+
+          // ✅ generate consistent color (same logic as server)
+          const name = user?.name ?? "Anonymous";
+          const nameToNumber = name.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          const hue = Math.abs(nameToNumber) % 360;
+          const color = `hsl(${hue}, 80%, 60%)`;
+
+          if (!user) {
+            return {
+              name: "Anonymous",
+              avatar: "",
+              color, // ✅ added color here
+            };
+          }
+
+          return {
+            name: user.name,
+            avatar: user.avatar,
+            color, // ✅ added color here
+          };
+        });
+
+        return resolved;
+      }}
+
+      resolveMentionSuggestions={({ text }) => {
+        let filteredUsers = users;
+
+        if (text) {
+          filteredUsers = users.filter((user) =>
+            user.name.toLowerCase().includes(text.toLowerCase())
+          );
+        } else {
+          filteredUsers = users;
+        }
+
+        return filteredUsers.map((user) => user.id);
+      }}
+      resolveRoomsInfo={async ({ roomIds }) => {
+        const documents = await getDocuments(roomIds as Id<"documents">[]);
+        return documents.map((document) => ({
+          id: document.id,
+          name: document.name,
+        }));
+      }}
+    >
+      <RoomProvider 
+        id={params.documentId as string} 
+        initialStorage={{ leftMargin: LEFT_MARGIN_DEFAULT, rightMargin: RIGHT_MARGIN_DEFAULT, contentInitialized: false }}
+      >
+        <ClientSideSuspense fallback={<FullscreenLoader label="Room Loading..." />}>
+          {children}
+        </ClientSideSuspense>
+      </RoomProvider>
+    </LiveblocksProvider>
+  );
+}

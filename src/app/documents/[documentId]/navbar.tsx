@@ -27,7 +27,8 @@ import {
     Unlock,
     Clock,
     Sparkles,
-    Lightbulb
+    Lightbulb,
+    MessageSquare
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 
@@ -55,6 +56,9 @@ import { DocumentInput } from "./document-input";
 import { ShareDialog } from "@/components/share-dialog";
 import { eRoles, RoleIndicator } from "./role-indicator";
 import { AIDocumentGenerator } from "./ai-document-generator";
+import { ChatPanel } from "./chat-panel";
+import { useChatNotifications } from "./use-chat-notifications";
+import { Badge } from "@/components/ui/badge";
 import { api } from "../../../../convex/_generated/api";
 import { Doc } from "../../../../convex/_generated/dataModel";
 
@@ -76,6 +80,11 @@ export const Navbar = ({ data }: NavbarProps) => {
     const [selectionFrom, setSelectionFrom] = useState<number>(0);
     const [selectionTo, setSelectionTo] = useState<number>(0);
     const [showAIGenerator, setShowAIGenerator] = useState(false);
+    const [chatOpen, setChatOpen] = useState(false);
+
+    // Get chat messages for unread count
+    const messages = useQuery(api.messages.getMessages, { documentId: data._id });
+    const { unreadCount } = useChatNotifications(data._id, messages, chatOpen);
 
     useEffect(() => {
         if (!editor) return;
@@ -413,6 +422,21 @@ export const Navbar = ({ data }: NavbarProps) => {
                 </ShareDialog>
                 <Avatars />
                 <Inbox />
+                <button
+                    onClick={() => setChatOpen(!chatOpen)}
+                    className="flex items-center justify-center size-9 rounded hover:bg-accent transition relative"
+                    title="Chat"
+                >
+                    <MessageSquare className="size-5" />
+                    {unreadCount > 0 && (
+                        <Badge
+                            variant="destructive"
+                            className="absolute -top-1 -right-1 size-5 flex items-center justify-center p-0 text-xs"
+                        >
+                            {unreadCount > 9 ? "9+" : unreadCount}
+                        </Badge>
+                    )}
+                </button>
                 <OrganizationSwitcher
                     afterCreateOrganizationUrl="/"
                     afterLeaveOrganizationUrl="/"
@@ -425,6 +449,12 @@ export const Navbar = ({ data }: NavbarProps) => {
                 open={showAIGenerator}
                 onClose={() => setShowAIGenerator(false)}
                 onInsert={handleInsertAIDocument}
+            />
+            <ChatPanel
+                documentId={data._id}
+                isOpen={chatOpen}
+                onClose={() => setChatOpen(false)}
+                onOpenChat={() => setChatOpen(true)}
             />
         </nav>
     );

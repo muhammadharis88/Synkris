@@ -58,7 +58,7 @@ Now generate the document:`;
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer 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',
+                    'Authorization': 'Bearer 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',
                     'HTTP-Referer': 'http://localhost:3000',
                     'X-Title': 'Synkris',
                     'Content-Type': 'application/json',

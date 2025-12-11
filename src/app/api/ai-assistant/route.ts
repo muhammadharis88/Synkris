@@ -58,13 +58,13 @@ Now generate the document:`;
             const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
                 method: 'POST',
                 headers: {
-                    'Authorization': 'Bearer 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',
-                    'HTTP-Referer': 'http://localhost:3000',
-                    'X-Title': 'Synkris',
+                    'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                    'HTTP-Referer': process.env.NEXT_PUBLIC_APP_URL!,
+                    'X-Title': process.env.NEXT_PUBLIC_APP_NAME!,
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    model: 'google/gemini-2.0-flash-001',
+                    model: process.env.MODEL_NAME,
                     messages: [
                         {
                             role: 'user',

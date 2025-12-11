@@ -2,10 +2,12 @@
 
 import { useQuery, useMutation } from "convex/react";
 import { Editor } from "@tiptap/react";
-import { RotateCcw, History, Lock, Unlock } from "lucide-react";
+import { RotateCcw, History, Lock, Unlock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { useState, useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+
+import { AIDialog } from "./ai-dialog";
 
 import {
     ContextMenu,
@@ -24,11 +26,11 @@ interface EditorContextMenuProps {
     onOpenVersionHistory?: (position: number) => void;
 }
 
-export const EditorContextMenu = ({ 
-    editor, 
-    documentId, 
+export const EditorContextMenu = ({
+    editor,
+    documentId,
     children,
-    onOpenVersionHistory 
+    onOpenVersionHistory
 }: EditorContextMenuProps) => {
     const { user } = useUser();
     const saveVersion = useMutation(api.textVersions.saveVersion);
@@ -36,7 +38,9 @@ export const EditorContextMenu = ({
     const unlockParagraph = useMutation(api.lockedParagraphs.unlockParagraph);
     const [selectionPosition, setSelectionPosition] = useState<number>(0);
     const [hasTextSelection, setHasTextSelection] = useState(false);
-    
+    const [selectedText, setSelectedText] = useState("");
+    const [showAIDialog, setShowAIDialog] = useState(false);
+
     // Update selection position when editor selection changes
     useEffect(() => {
         if (!editor) return;
@@ -44,7 +48,13 @@ export const EditorContextMenu = ({
         const updateSelection = () => {
             const { from, to } = editor.state.selection;
             setSelectionPosition(from);
-            setHasTextSelection(from !== to);
+            const hasSelection = from !== to;
+            setHasTextSelection(hasSelection);
+            if (hasSelection) {
+                setSelectedText(editor.state.doc.textBetween(from, to));
+            } else {
+                setSelectedText("");
+            }
         };
 
         editor.on("selectionUpdate", updateSelection);
@@ -54,7 +64,7 @@ export const EditorContextMenu = ({
             editor.off("selectionUpdate", updateSelection);
         };
     }, [editor]);
-    
+
     // Find paragraph boundaries for the current selection
     const getParagraphBounds = () => {
         if (!editor) return { start: 0, end: 0 };
@@ -67,13 +77,13 @@ export const EditorContextMenu = ({
     };
 
     const paragraphBounds = editor ? getParagraphBounds() : { start: 0, end: 0 };
-    
+
     // Check if current paragraph is locked
     const locks = useQuery(
         api.lockedParagraphs.getLockedParagraphs,
         { documentId }
     );
-    
+
     // Get versions for the current paragraph position
     const versions = useQuery(
         api.textVersions.getVersionsByPosition,
@@ -214,6 +224,25 @@ export const EditorContextMenu = ({
         }
     };
 
+    const handleAskAI = () => {
+        if (hasTextSelection) {
+            setShowAIDialog(true);
+        }
+    };
+
+    const handleApplyAI = (content: string) => {
+        if (!editor) return;
+
+        editor
+            .chain()
+            .focus()
+            .deleteSelection()
+            .insertContent(content)
+            .run();
+
+        toast.success("AI changes applied");
+    };
+
     return (
         <ContextMenu>
             <ContextMenuTrigger asChild>
@@ -261,7 +290,22 @@ export const EditorContextMenu = ({
                         </ContextMenuItem>
                     </>
                 )}
+                {hasTextSelection && (
+                    <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={handleAskAI}>
+                            <Sparkles className="mr-2 h-4 w-4 text-purple-600" />
+                            Ask AI
+                        </ContextMenuItem>
+                    </>
+                )}
             </ContextMenuContent>
+            <AIDialog
+                open={showAIDialog}
+                onClose={() => setShowAIDialog(false)}
+                selectedText={selectedText}
+                onApply={handleApplyAI}
+            />
         </ContextMenu>
     );
 };

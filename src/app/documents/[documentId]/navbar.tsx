@@ -25,7 +25,9 @@ import {
     Undo2Icon,
     Lock,
     Unlock,
-    Clock
+    Clock,
+    Sparkles,
+    Lightbulb
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 
@@ -52,6 +54,7 @@ import { Avatars } from "./avatars";
 import { DocumentInput } from "./document-input";
 import { ShareDialog } from "@/components/share-dialog";
 import { eRoles, RoleIndicator } from "./role-indicator";
+import { AIDocumentGenerator } from "./ai-document-generator";
 import { api } from "../../../../convex/_generated/api";
 import { Doc } from "../../../../convex/_generated/dataModel";
 
@@ -72,6 +75,7 @@ export const Navbar = ({ data }: NavbarProps) => {
     const [paragraphEnd, setParagraphEnd] = useState<number>(0);
     const [selectionFrom, setSelectionFrom] = useState<number>(0);
     const [selectionTo, setSelectionTo] = useState<number>(0);
+    const [showAIGenerator, setShowAIGenerator] = useState(false);
 
     useEffect(() => {
         if (!editor) return;
@@ -205,6 +209,16 @@ export const Navbar = ({ data }: NavbarProps) => {
         } catch (e: any) {
             toast.error(e?.message || "Failed to toggle lock");
         }
+    };
+
+    const handleInsertAIDocument = (content: string) => {
+        editor
+            ?.chain()
+            .focus()
+            .clearContent()
+            .insertContent(content)
+            .run();
+        toast.success("AI-generated document inserted");
     };
 
     return (
@@ -354,6 +368,21 @@ export const Navbar = ({ data }: NavbarProps) => {
                                     </MenubarItem>
                                 </MenubarContent>
                             </MenubarMenu>
+                            <MenubarMenu>
+                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                    AI Assistant
+                                </MenubarTrigger>
+                                <MenubarContent>
+                                    <MenubarItem onClick={() => setShowAIGenerator(true)}>
+                                        <Sparkles className="size-4 mr-2 text-purple-600" />
+                                        Generate Document
+                                    </MenubarItem>
+                                    <MenubarItem onClick={() => toast.info("Select text and right-click to use Ask AI")}>
+                                        <Lightbulb className="size-4 mr-2 text-yellow-600" />
+                                        AI Help
+                                    </MenubarItem>
+                                </MenubarContent>
+                            </MenubarMenu>
                         </Menubar>
                     </div>
                 </div>
@@ -392,6 +421,11 @@ export const Navbar = ({ data }: NavbarProps) => {
                 />
                 <UserButton />
             </div>
+            <AIDocumentGenerator
+                open={showAIGenerator}
+                onClose={() => setShowAIGenerator(false)}
+                onInsert={handleInsertAIDocument}
+            />
         </nav>
     );
 };

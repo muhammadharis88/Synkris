@@ -51,6 +51,7 @@ import { Inbox } from "./inbox";
 import { Avatars } from "./avatars";
 import { DocumentInput } from "./document-input";
 import { ShareDialog } from "@/components/share-dialog";
+import { eRoles, RoleIndicator } from "./role-indicator";
 import { api } from "../../../../convex/_generated/api";
 import { Doc } from "../../../../convex/_generated/dataModel";
 
@@ -96,6 +97,11 @@ export const Navbar = ({ data }: NavbarProps) => {
 
     // Fetch all locks and compute overlap with current selection/paragraph
     const locks = useQuery(api.lockedParagraphs.getLockedParagraphs, { documentId: data._id });
+
+    // Fetch auth info to get user's role
+    const authInfo = useQuery(api.documents.getAuthInfo, { id: data._id });
+    const isOwner = data.ownerId === user?.id;
+
     const activeLock = useMemo(() => {
         if (!locks) return null;
         const from = selectionFrom;
@@ -209,7 +215,11 @@ export const Navbar = ({ data }: NavbarProps) => {
                 </Link>
                 <div className="flex flex-col">
                     <DocumentInput title={data.title} id={data._id} />
-                    <div className="flex">
+                    <div className="flex items-center gap-2">
+                        {/* Show role indicator for shared documents */}
+                        {authInfo?.role && (
+                            <RoleIndicator role={authInfo.role as eRoles} isOwner={isOwner} />
+                        )}
                         <Menubar className="border-none bg-transparent shadow-none h-auto p-0">
                             <MenubarMenu>
                                 <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">

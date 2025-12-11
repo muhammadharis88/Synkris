@@ -283,17 +283,21 @@ export const getShared = query({
             .withIndex("by_user", (q) => q.eq("userId", user.tokenIdentifier))
             .paginate(paginationOpts);
 
-        const documents = await Promise.all(shares.page.map(async (share) => {
+        const documentsWithRole = await Promise.all(shares.page.map(async (share) => {
             const document = await ctx.db.get(share.documentId);
             if (!document) {
                 return null;
             }
-            return document;
+            // Include role information with the document
+            return {
+                ...document,
+                role: share.role,
+            };
         }));
 
         return {
             ...shares,
-            page: documents.filter((doc) => doc !== null),
+            page: documentsWithRole.filter((doc) => doc !== null),
         };
     },
 });

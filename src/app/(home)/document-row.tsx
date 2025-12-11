@@ -7,10 +7,11 @@ import { useUser } from "@clerk/nextjs";
 import { TableCell, TableRow } from "@/components/ui/table";
 
 import { DocumentMenu } from "./document-menu";
+import { RoleBadge } from "./role-badge";
 import { Doc } from "../../../convex/_generated/dataModel";
 
 interface DocumentRowProps {
-    document: Doc<"documents">;
+    document: Doc<"documents"> & { role?: "viewer" | "commenter" | "editor" };
 };
 
 export const DocumentRow = ({ document }: DocumentRowProps) => {
@@ -30,10 +31,16 @@ export const DocumentRow = ({ document }: DocumentRowProps) => {
                 {document.title}
             </TableCell>
             <TableCell className="text-muted-foreground hidden md:flex items-center gap-2">
-                {document.organizationId
-                    ? <Building2Icon className="size-4" />
-                    : <CircleUser className="size-4" />}
-                {document.organizationId ? "Organization" : "Personal"}
+                {document.role ? (
+                    <RoleBadge role={document.role} />
+                ) : (
+                    <>
+                        {document.organizationId
+                            ? <Building2Icon className="size-4" />
+                            : <CircleUser className="size-4" />}
+                        {document.organizationId ? "Organization" : "Personal"}
+                    </>
+                )}
             </TableCell>
             <TableCell className="text-muted-foreground hidden md:table-cell">
                 {format(new Date(document._creationTime), "MMM dd, yyyy")}

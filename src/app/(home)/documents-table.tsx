@@ -27,11 +27,12 @@ export const DocumentsTable = ({
 }: DocumentsTableProps) => {
     return (
         <div className="max-w-screen-xl mx-auto px-16 py-6 flex flex-col gap-5">
+            <h2 className="text-xl font-semibold mb-4">All Documents</h2>
             {documents === undefined ? (
                 <div className="flex justify-center items-center h-24">
                     <LoaderIcon className="animate-spin text-muted-foreground size-5" />
                 </div>
-            ): (
+            ) : (
                 <Table>
                     <TableHeader>
                         <TableRow className="hover:bg-transparent border-none">
@@ -51,21 +52,21 @@ export const DocumentsTable = ({
                         </TableBody>
                     ) : (
                         <TableBody>
-                                {documents.map((document) => (
-                                    <DocumentRow key={document._id} document={document} />
-                                ))}
+                            {documents.map((document) => (
+                                <DocumentRow key={document._id} document={document} />
+                            ))}
                         </TableBody>
                     )}
                 </Table>
             )}
             <div className="flex items-center justify-center">
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={() => loadMore(5)} 
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => loadMore(5)}
                     disabled={status !== "CanLoadMore"}
                 >
-                    {status === "CanLoadMore" ? "Load more" : "End of results"}
+                    {status === "CanLoadMore" ? "Load more" : "You are all caught up!"}
                 </Button>
             </div>
         </div>

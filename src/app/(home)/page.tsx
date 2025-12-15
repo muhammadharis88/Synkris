@@ -59,7 +59,6 @@ const Home = () => {
       <div className="mt-16 p-4">
         <TemplatesGallery />
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">All Documents</h2>
           <DocumentsTable
             documents={documents}
             loadMore={loadMoreAll}

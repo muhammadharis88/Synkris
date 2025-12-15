@@ -48,7 +48,7 @@ export const VersionHistoryPanel = ({
     const [restoringVersionId, setRestoringVersionId] = useState<string | null>(null);
 
     // Get versions from Convex
-    const versions = useQuery(
+    const versions: any = useQuery(
         api.textVersions.getVersionsByPosition,
         isOpen && editor
             ? {
@@ -75,28 +75,38 @@ export const VersionHistoryPanel = ({
         setLoadingUsers(true);
         const fetchUserInfo = async () => {
             try {
-                const versionsWithUserInfo = await Promise.all(
-                    versions.map(async (version) => {
+                // Deduplicate distinct user IDs
+                const uniqueUserIds = Array.from(new Set(versions.map((v: any) => v.createdBy)));
+
+                // Fetch each unique user once
+                const users = await Promise.all(
+                    uniqueUserIds.map(async (userId) => {
                         try {
-                            const response = await fetch(`/api/user-info?userId=${version.createdBy}`);
+                            const response = await fetch(`/api/user-info?userId=${userId}`);
                             if (response.ok) {
                                 const userInfo = await response.json();
-                                return {
-                                    ...version,
-                                    userName: userInfo.name,
-                                    userAvatar: userInfo.avatar,
-                                };
+                                return { userId, ...userInfo };
                             }
-                            throw new Error("Failed to fetch user info");
                         } catch (error) {
-                            return {
-                                ...version,
-                                userName: "Unknown User",
-                                userAvatar: "",
-                            };
+                            return { userId, name: "Unknown User", avatar: "" };
                         }
+                        return { userId, name: "Unknown User", avatar: "" };
                     })
                 );
+
+                // Create a map for fast lookup
+                const userMap = new Map(users.map((u: any) => [u.userId, u]));
+
+                // Map versions to user info from the map
+                const versionsWithUserInfo = versions.map((version: any) => {
+                    const userInfo = userMap.get(version.createdBy);
+                    return {
+                        ...version,
+                        userName: userInfo?.name || "Unknown User",
+                        userAvatar: userInfo?.avatar || ""
+                    };
+                });
+
                 setVersionsWithUsers(versionsWithUserInfo);
             } finally {
                 setLoadingUsers(false);
@@ -121,7 +131,7 @@ export const VersionHistoryPanel = ({
         if (!editor) return;
 
         setSelectedVersionId(version._id);
-        
+
         // Try to find the version content in the document by searching
         // We'll use the version's stored position as a starting point
         const searchStart = version.position;
@@ -132,7 +142,7 @@ export const VersionHistoryPanel = ({
 
         // Try to find matching or similar content
         const currentContent = editor.state.doc.textBetween(searchStart, searchEnd);
-        
+
         // If we found the exact content or it's close, use those positions
         let startPos = searchStart;
         let endPos = searchStart + version.length;
@@ -177,8 +187,8 @@ export const VersionHistoryPanel = ({
         try {
             const bounds = getParagraphBounds();
             const startPos = version.position !== undefined ? version.position : bounds.start;
-            const endPos = version.position !== undefined 
-                ? version.position + version.length 
+            const endPos = version.position !== undefined
+                ? version.position + version.length
                 : bounds.end;
 
             // Replace with version content
@@ -251,7 +261,7 @@ export const VersionHistoryPanel = ({
 
                     {/* Version list - show versions even while loading user info */}
                     {versions !== undefined && versions.length > 0 && (
-                        (loadingUsers && versionsWithUsers.length === 0 ? versions : versionsWithUsers).map((version, index) => {
+                        (loadingUsers && versionsWithUsers.length === 0 ? versions : versionsWithUsers).map((version: any, index: any) => {
                             const isSelected = selectedVersionId === version._id;
                             const isCurrent = index === 0;
                             const date = new Date(version.createdAt);

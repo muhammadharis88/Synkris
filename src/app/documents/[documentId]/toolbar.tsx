@@ -3,32 +3,32 @@
 import React, { useState } from "react";
 import { type ColorResult, SketchPicker } from "react-color";
 import { type Level } from "@tiptap/extension-heading";
-import { 
+import {
     AlignCenterIcon,
     AlignJustifyIcon,
     AlignLeftIcon,
     AlignRightIcon,
-    BoldIcon, 
-    ChevronDownIcon, 
-    HighlighterIcon, 
-    ImageIcon, 
-    ItalicIcon, 
-    Link2Icon, 
-    ListCollapseIcon, 
-    ListIcon, 
-    ListOrderedIcon, 
-    ListTodoIcon, 
-    LucideIcon, 
-    MessageSquarePlusIcon, 
-    MinusIcon, 
-    PlusIcon, 
-    PrinterIcon, 
-    Redo2Icon, 
-    RemoveFormattingIcon, 
-    SearchIcon, 
-    SpellCheckIcon, 
-    UnderlineIcon, 
-    Undo2Icon, 
+    BoldIcon,
+    ChevronDownIcon,
+    HighlighterIcon,
+    ImageIcon,
+    ItalicIcon,
+    Link2Icon,
+    ListCollapseIcon,
+    ListIcon,
+    ListOrderedIcon,
+    ListTodoIcon,
+    LucideIcon,
+    MessageSquarePlusIcon,
+    MinusIcon,
+    PlusIcon,
+    PrinterIcon,
+    Redo2Icon,
+    RemoveFormattingIcon,
+    SearchIcon,
+    SpellCheckIcon,
+    UnderlineIcon,
+    Undo2Icon,
     UploadIcon
 } from "lucide-react";
 
@@ -52,7 +52,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 const LineHeightButton = () => {
-    
+
     const { editor } = useEditorStore();
 
     const lineHeights = [
@@ -69,7 +69,7 @@ const LineHeightButton = () => {
                 <button
                     className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
                 >
-                    <ListCollapseIcon className="size-4"/>
+                    <ListCollapseIcon className="size-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-1 flex flex-col gap=y-1">
@@ -91,7 +91,7 @@ const LineHeightButton = () => {
 }
 
 const FontSizeButton = () => {
-    
+
     const { editor } = useEditorStore();
     const currentFontSize = editor?.getAttributes("textStyle").fontSize
         ? editor?.getAttributes("textStyle").fontSize.replace("px", "")
@@ -145,10 +145,10 @@ const FontSizeButton = () => {
                 onClick={decrement}
                 className="h-7 w-7 shrink-0 flex items-center justify-center rounded-sm hover:bg-neutral-200/80"
             >
-                <MinusIcon className="size-4"/>
+                <MinusIcon className="size-4" />
             </button>
             {isEditing ? (
-                <input 
+                <input
                     type="text"
                     value={inputValue}
                     onChange={handleInputChange}
@@ -171,14 +171,14 @@ const FontSizeButton = () => {
                 onClick={increment}
                 className="h-7 w-7 shrink-0 flex items-center justify-center rounded-sm hover:bg-neutral-200/80"
             >
-                <PlusIcon className="size-4"/>
+                <PlusIcon className="size-4" />
             </button>
         </div>
     );
 }
 
 const ListButton = () => {
-    
+
     const { editor } = useEditorStore();
 
     const lists = [
@@ -202,7 +202,7 @@ const ListButton = () => {
                 <button
                     className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
                 >
-                    <ListIcon className="size-4"/>
+                    <ListIcon className="size-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-1 flex flex-col gap=y-1">
@@ -215,7 +215,7 @@ const ListButton = () => {
                             isActive() && "bg-neutral-200/80"
                         )}
                     >
-                        <Icon className="size-4"/>
+                        <Icon className="size-4" />
                         <span className="text-sm">{label}</span>
                     </button>
                 ))}
@@ -225,7 +225,7 @@ const ListButton = () => {
 }
 
 const AlignButton = () => {
-    
+
     const { editor } = useEditorStore();
 
     const alignments = [
@@ -257,7 +257,7 @@ const AlignButton = () => {
                 <button
                     className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
                 >
-                    <AlignLeftIcon className="size-4"/>
+                    <AlignLeftIcon className="size-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-1 flex flex-col gap=y-1">
@@ -270,7 +270,7 @@ const AlignButton = () => {
                             editor?.isActive({ textAlign: value }) && "bg-neutral-200/80"
                         )}
                     >
-                        <Icon className="size-4"/>
+                        <Icon className="size-4" />
                         <span className="text-sm">{label}</span>
                     </button>
                 ))}
@@ -314,49 +314,49 @@ const ImageButton = () => {
 
     return (
         <>
-        <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-                <button
-                    className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
-                >
-                    <ImageIcon className="size-4"/>
-                </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-                <DropdownMenuItem onClick={onUpload}>
-                    <UploadIcon className="size-4 mr-2" />
-                    Upload
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
-                    <SearchIcon className="size-4 mr-2" />
-                    Paste Image Url
-                </DropdownMenuItem>
-            </DropdownMenuContent>
-        </DropdownMenu>
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <button
+                        className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
+                    >
+                        <ImageIcon className="size-4" />
+                    </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                    <DropdownMenuItem onClick={onUpload}>
+                        <UploadIcon className="size-4 mr-2" />
+                        Upload
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setIsDialogOpen(true)}>
+                        <SearchIcon className="size-4 mr-2" />
+                        Paste Image Url
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
 
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Insert Image Url</DialogTitle>
-                </DialogHeader>
-                <Input 
-                    placeholder="Insert Image Url"
-                    value={imageUrl}
-                    onChange={(e) => setImageUrl(e.target.value)}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            handleImageUrlSubmit();
-                        }
-                    }}
-                />
-                <DialogFooter>
-                    <Button onClick={handleImageUrlSubmit}>
-                        Insert
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    </>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Insert Image Url</DialogTitle>
+                    </DialogHeader>
+                    <Input
+                        placeholder="Insert Image Url"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                handleImageUrlSubmit();
+                            }
+                        }}
+                    />
+                    <DialogFooter>
+                        <Button onClick={handleImageUrlSubmit}>
+                            Insert
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
+        </>
     );
 };
 
@@ -379,19 +379,19 @@ const LinkButton = () => {
                 <button
                     className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
                 >
-                    <Link2Icon className="size-4"/>
+                    <Link2Icon className="size-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-2.5 flex items-center gap-x-2">
-                <Input 
+                <Input
                     placeholder="https://example.com"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
                 />
-                <Button 
+                <Button
                     onClick={() => onChange(value)}>
-                        Apply
-                    </Button>
+                    Apply
+                </Button>
             </DropdownMenuContent>
         </DropdownMenu>
     );
@@ -412,7 +412,7 @@ const HighlightColorButton = () => {
                 <button
                     className="h-7 min-w-7 shrink-0 flex flex-col items-center justify-center rounded-sm hover:bg-neutral-200/80 px-1.5 overflow-hidden text-sm"
                 >
-                    <HighlighterIcon className="size-4"/>
+                    <HighlighterIcon className="size-4" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-0">
@@ -458,12 +458,12 @@ const HeadingLevelButton = () => {
     const { editor } = useEditorStore();
 
     const headings = [
-        {label: "Normal text", value: 0, fontSize: "16px"},
-        {label: "Heading 1", value: 1, fontSize: "32px"},
-        {label: "Heading 2", value: 2, fontSize: "24px"},
-        {label: "Heading 3", value: 3, fontSize: "20px"},
-        {label: "Heading 4", value: 4, fontSize: "18px"},
-        {label: "Heading 5", value: 5, fontSize: "16px"},
+        { label: "Normal text", value: 0, fontSize: "16px" },
+        { label: "Heading 1", value: 1, fontSize: "32px" },
+        { label: "Heading 2", value: 2, fontSize: "24px" },
+        { label: "Heading 3", value: 3, fontSize: "20px" },
+        { label: "Heading 4", value: 4, fontSize: "18px" },
+        { label: "Heading 5", value: 5, fontSize: "16px" },
     ];
 
     const getCurrentHeading = () => {
@@ -485,7 +485,7 @@ const HeadingLevelButton = () => {
                     <span className="truncate">
                         {getCurrentHeading()}
                     </span>
-                    <ChevronDownIcon className="ml-2 size-4 shrink-0"/>
+                    <ChevronDownIcon className="ml-2 size-4 shrink-0" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-1 flex flex-col gap-y-1">
@@ -533,7 +533,7 @@ const FontFamilyButton = () => {
                     <span className="truncate">
                         {editor?.getAttributes("textStyle").fontFamily || "Arial"}
                     </span>
-                    <ChevronDownIcon className="ml-2 size-4 shrink-0"/>
+                    <ChevronDownIcon className="ml-2 size-4 shrink-0" />
                 </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-1 flex flex-col gap-y-1">
@@ -561,11 +561,11 @@ interface ToolbarButtonProps {
     icon: LucideIcon;
 };
 
-const ToolbarButton = ({ 
+const ToolbarButton = ({
     onClick,
     isActive,
     icon: Icon,
- }: ToolbarButtonProps) => {
+}: ToolbarButtonProps) => {
     return (
         <button
             onClick={onClick}
@@ -574,7 +574,7 @@ const ToolbarButton = ({
                 isActive && "bg-neutral-200/80"
             )}
         >
-            <Icon className="size-4"/>
+            <Icon className="size-4" />
         </button>
     )
 }
@@ -582,79 +582,79 @@ const ToolbarButton = ({
 export const Toolbar = () => {
     const { editor } = useEditorStore();
 
-    const sections: { 
-        label: string; 
+    const sections: {
+        label: string;
         icon: LucideIcon;
         onClick: () => void;
         isActive?: boolean;
     }[][] = [
-        [
-            {
-                label: "Undo",
-                icon: Undo2Icon,
-                onClick: () => editor?.chain().focus().undo().run(),
-            },
-            {
-                label: "Redo",
-                icon: Redo2Icon,
-                onClick: () => editor?.chain().focus().redo().run(),
-            },
-            {
-                label: "Print",
-                icon: PrinterIcon,
-                onClick: () => window.print(),
-            },
-            {
-                label: "Spell Check",
-                icon: SpellCheckIcon,
-                onClick: () => {
-                    const current = editor?.view.dom.getAttribute("spellcheck");
-                    editor?.view.dom.setAttribute("spellcheck", current === "false" ? "true" : "false");
+            [
+                {
+                    label: "Undo",
+                    icon: Undo2Icon,
+                    onClick: () => editor?.chain().focus().undo().run(),
                 },
-            },
-        ],
-        [
-            {
-                label: "Bold",
-                icon: BoldIcon,
-                isActive: editor?.isActive("bold"),
-                onClick: () => editor?.chain().focus().toggleBold().run(),
-            },
-            {
-                label: "Italic",
-                icon: ItalicIcon,
-                isActive: editor?.isActive("italic"),
-                onClick: () => editor?.chain().focus().toggleItalic().run(),
-            },
-            {
-                label: "Underline",
-                icon: UnderlineIcon,
-                isActive: editor?.isActive("underline"),
-                onClick: () => editor?.chain().focus().toggleUnderline().run(),
-            },
-        ],
-        [
-            {
-                label: "Comment",
-                icon: MessageSquarePlusIcon,
-                onClick: () => editor?.chain().focus().addPendingComment().run(),
-                isActive: editor?.isActive("liveblocksCommentMark"),
-            },
-            {
-                label: "List Todo",
-                icon: ListTodoIcon,
-                onClick: () => editor?.chain().focus().toggleTaskList().run(),
-                isActive: editor?.isActive("taskList"),
-            },
-            {
-                label: "Remove Formatting",
-                icon: RemoveFormattingIcon,
-                onClick: () => editor?.chain().focus().unsetAllMarks().run(),
-            },
-        ],
-    ];
+                {
+                    label: "Redo",
+                    icon: Redo2Icon,
+                    onClick: () => editor?.chain().focus().redo().run(),
+                },
+                {
+                    label: "Print",
+                    icon: PrinterIcon,
+                    onClick: () => window.print(),
+                },
+                {
+                    label: "Spell Check",
+                    icon: SpellCheckIcon,
+                    onClick: () => {
+                        const current = editor?.view.dom.getAttribute("spellcheck");
+                        editor?.view.dom.setAttribute("spellcheck", current === "false" ? "true" : "false");
+                    },
+                },
+            ],
+            [
+                {
+                    label: "Bold",
+                    icon: BoldIcon,
+                    isActive: editor?.isActive("bold"),
+                    onClick: () => editor?.chain().focus().toggleBold().run(),
+                },
+                {
+                    label: "Italic",
+                    icon: ItalicIcon,
+                    isActive: editor?.isActive("italic"),
+                    onClick: () => editor?.chain().focus().toggleItalic().run(),
+                },
+                {
+                    label: "Underline",
+                    icon: UnderlineIcon,
+                    isActive: editor?.isActive("underline"),
+                    onClick: () => editor?.chain().focus().toggleUnderline().run(),
+                },
+            ],
+            [
+                {
+                    label: "Comment",
+                    icon: MessageSquarePlusIcon,
+                    onClick: () => editor?.chain().focus().addPendingComment().run(),
+                    isActive: editor?.isActive("liveblocksCommentMark"),
+                },
+                {
+                    label: "List Todo",
+                    icon: ListTodoIcon,
+                    onClick: () => editor?.chain().focus().toggleTaskList().run(),
+                    isActive: editor?.isActive("taskList"),
+                },
+                {
+                    label: "Remove Formatting",
+                    icon: RemoveFormattingIcon,
+                    onClick: () => editor?.chain().focus().unsetAllMarks().run(),
+                },
+            ],
+        ];
 
-    return ( 
+    return (
         <div className="bg-[#f1f4f9] px-2.5 py-0.5 rounded-[24px] min-h-[40px] flex items-center gap-x-0.5 overflow-x-auto">
             {sections[0].map((item) => (
                 <ToolbarButton key={item.label} {...item} />
@@ -681,5 +681,5 @@ export const Toolbar = () => {
                 <ToolbarButton key={item.label} {...item} />
             ))}
         </div>
-     );
+    );
 };

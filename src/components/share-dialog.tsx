@@ -24,13 +24,102 @@ import {
 } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { toast } from "sonner";
-import { Loader2, Trash2 } from "lucide-react";
+import { Check, Loader2, Trash2 } from "lucide-react";
 import { useUser } from "@clerk/nextjs";
+import { cn } from "@/lib/utils";
 
 interface ShareDialogProps {
     documentId: Id<"documents">;
     children: React.ReactNode;
 }
+
+const UserShareRow = ({
+    documentId,
+    share,
+    onRemove,
+}: {
+    documentId: Id<"documents">;
+    share: any;
+    onRemove: (userId: string) => void;
+}) => {
+    const [role, setRole] = useState<"viewer" | "commenter" | "editor">(share.role);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isPending, setIsPending] = useState(false);
+
+    const shareDocument = useMutation(api.shares.shareDocument);
+
+    const onRoleChange = async () => {
+        setIsLoading(true);
+        try {
+            await shareDocument({
+                documentId,
+                email: share.email,
+                role
+            });
+            toast.success("Role updated");
+            setIsPending(false);
+        } catch (error) {
+            console.error("Failed to update role:", error);
+            toast.error("Failed to update role");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    return (
+        <div className="flex items-center justify-between p-2 border rounded-md">
+            <div className="flex items-center gap-2">
+                <Avatar className="size-8">
+                    <AvatarImage src={share.user?.image} />
+                    <AvatarFallback>{share.user?.name?.[0] ?? "?"}</AvatarFallback>
+                </Avatar>
+                <div className="text-sm">
+                    <div className="font-medium">{share.user?.name ?? share.email}</div>
+                    <div className="text-muted-foreground text-xs">
+                        {share.user?.email ?? "Pending Invite"}
+                    </div>
+                </div>
+            </div>
+            <div className="flex items-center gap-2">
+                <Select
+                    value={role}
+                    onValueChange={(v: "viewer" | "commenter" | "editor") => {
+                        setRole(v);
+                        setIsPending(true);
+                    }}
+                >
+                    <SelectTrigger className="w-[100px] h-8 text-xs">
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="viewer">Viewer</SelectItem>
+                        <SelectItem value="commenter">Commenter</SelectItem>
+                        <SelectItem value="editor">Editor</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={onRoleChange}
+                    disabled={isLoading || !isPending}
+                >
+                    {isLoading ? (
+                        <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                        <Check className={cn("size-4", isPending ? "text-primary" : "text-muted-foreground")} />
+                    )}
+                </Button>
+                <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onRemove(share.userId)}
+                >
+                    <Trash2 className="size-4 text-destructive" />
+                </Button>
+            </div>
+        </div>
+    );
+};
 
 export const ShareDialog = ({ documentId, children }: ShareDialogProps) => {
     const [email, setEmail] = useState("");
@@ -137,35 +226,12 @@ export const ShareDialog = ({ documentId, children }: ShareDialogProps) => {
                         <Label>People with access</Label>
                         <div className="space-y-2">
                             {shares?.map((share) => (
-                                <div
+                                <UserShareRow
                                     key={share._id}
-                                    className="flex items-center justify-between p-2 border rounded-md"
-                                >
-                                    <div className="flex items-center gap-2">
-                                        <Avatar className="size-8">
-                                            <AvatarImage src={share.user?.image} />
-                                            <AvatarFallback>{share.user?.name?.[0] ?? "?"}</AvatarFallback>
-                                        </Avatar>
-                                        <div className="text-sm">
-                                            <div className="font-medium">{share.user?.name ?? share.email}</div>
-                                            <div className="text-muted-foreground text-xs">
-                                                {share.user?.email ?? "Pending Invite"}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-sm text-muted-foreground capitalize">
-                                            {share.role}
-                                        </span>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => onRemove(share.userId)}
-                                        >
-                                            <Trash2 className="size-4 text-destructive" />
-                                        </Button>
-                                    </div>
-                                </div>
+                                    documentId={documentId}
+                                    share={share}
+                                    onRemove={onRemove}
+                                />
                             ))}
                             {shares?.length === 0 && (
                                 <div className="text-sm text-muted-foreground text-center py-4">

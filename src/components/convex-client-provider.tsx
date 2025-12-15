@@ -27,7 +27,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
                     </div>
                 </Unauthenticated>
                 <AuthLoading>
-                    <FullscreenLoader label="Auth Loading..." />
+                    <FullscreenLoader label="Synkris is getting ready..." />
                 </AuthLoading>
             </ConvexProviderWithClerk>
         </ClerkProvider>

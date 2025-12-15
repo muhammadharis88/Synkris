@@ -106,7 +106,7 @@ export function Room({ children }: { children: ReactNode }) {
         id={params.documentId as string} 
         initialStorage={{ leftMargin: LEFT_MARGIN_DEFAULT, rightMargin: RIGHT_MARGIN_DEFAULT, contentInitialized: false }}
       >
-        <ClientSideSuspense fallback={<FullscreenLoader label="Room Loading..." />}>
+        <ClientSideSuspense fallback={<FullscreenLoader label="" />}>
           {children}
         </ClientSideSuspense>
       </RoomProvider>

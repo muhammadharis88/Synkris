@@ -4,6 +4,7 @@ import { usePaginatedQuery } from "convex/react";
 import { useEffect } from "react";
 
 import { useSearchParam } from "@/hooks/use-search-param";
+import { FullscreenLoader } from "@/components/fullscreen-loader";
 
 import { Navbar } from "./navbar";
 import { DocumentsTable } from "./documents-table";
@@ -31,6 +32,25 @@ const Home = () => {
     }
   }, [sharedStatus, sharedResults, loadMoreShared]);
 
+  if (results === undefined || sharedResults === undefined) {
+    return <FullscreenLoader label="Loading documents..." />;
+  }
+
+  // Merge and sort documents
+  const documents = [
+    ...(results || []),
+    ...(sharedResults || [])
+  ].sort((a, b) => b._creationTime - a._creationTime);
+
+  const loadMoreAll = (numItems: number) => {
+    if (status === "CanLoadMore") loadMore(numItems);
+    if (sharedStatus === "CanLoadMore") loadMoreShared(numItems);
+  };
+
+  const statusAll = (status === "CanLoadMore" || sharedStatus === "CanLoadMore")
+    ? "CanLoadMore"
+    : "Exhausted";
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="fixed top-0 left-0 right-0 z-10 h-16 bg-white p-4">
@@ -39,19 +59,11 @@ const Home = () => {
       <div className="mt-16 p-4">
         <TemplatesGallery />
         <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">My Documents</h2>
+          <h2 className="text-xl font-semibold mb-4">All Documents</h2>
           <DocumentsTable
-            documents={results}
-            loadMore={loadMore}
-            status={status}
-          />
-        </div>
-        <div className="mt-8">
-          <h2 className="text-xl font-semibold mb-4">Shared with me</h2>
-          <DocumentsTable
-            documents={sharedResults}
-            loadMore={loadMoreShared}
-            status={sharedStatus}
+            documents={documents}
+            loadMore={loadMoreAll}
+            status={statusAll}
           />
         </div>
       </div>

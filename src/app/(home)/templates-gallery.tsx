@@ -43,7 +43,7 @@ export const TemplatesGallery = () => {
                     <CarouselContent className="-ml-4">
                         {templates.map((template) => (
                             <CarouselItem
-                                key={template.id}    
+                                key={template.id}
                                 className="basis-1/2 sm:basis-1/3 md:basis-1/4 lg:basis-1/5 xl:basi-1/6 2xl:basis-[14.285714%] pl-4"
                             >
                                 <div
@@ -61,11 +61,11 @@ export const TemplatesGallery = () => {
                                             backgroundPosition: "center",
                                             backgroundRepeat: "no-repeat",
                                         }}
-                                        className="size-full hover:border-blue-500 rounded-sm border hover:bg-blue-50 transition flex flex-col items-center justify-center gap-y-4 bg-white"
+                                        className="size-full hover:border-blue-500 rounded-[24px] border hover:bg-blue-50 transition flex flex-col items-center justify-center gap-y-4 bg-white"
                                     />
                                     <p className="text-sm font-medium truncate">
-                                            {template.label}
-                                        </p>
+                                        {template.label}
+                                    </p>
                                 </div>
 
                             </CarouselItem>

@@ -5,7 +5,7 @@ import Image from "next/image"
 import { toast } from "sonner";
 import { BsFilePdf } from "react-icons/bs";
 import { useRouter } from "next/navigation";
-import { OrganizationSwitcher, UserButton } from "@clerk/nextjs";
+import { UserMenu } from "@/components/user-menu";
 import {
     BoldIcon,
     FileIcon,
@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { useMutation, useQuery } from "convex/react";
 
+import { Button } from "@/components/ui/button";
 import { RenameDialog } from "@/components/rename-dialog";
 import { RemoveDialog } from "@/components/remove-dialog";
 import {
@@ -407,19 +408,13 @@ export const Navbar = ({ data }: NavbarProps) => {
                     <Clock className="size-5" />
                 </button>
                 <ShareDialog documentId={data._id}>
-                    <button className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition">
+                    <Button className="h-9 px-4 py-2 text-sm font-medium transition">
                         Share
-                    </button>
+                    </Button>
                 </ShareDialog>
                 <Avatars />
                 <Inbox />
-                <OrganizationSwitcher
-                    afterCreateOrganizationUrl="/"
-                    afterLeaveOrganizationUrl="/"
-                    afterSelectOrganizationUrl="/"
-                    afterSelectPersonalUrl="/"
-                />
-                <UserButton />
+                <UserMenu />
             </div>
             <AIDocumentGenerator
                 open={showAIGenerator}

@@ -6,6 +6,8 @@ import { useUser } from "@clerk/nextjs";
 
 import { TableCell, TableRow } from "@/components/ui/table";
 
+import { Badge } from "@/components/ui/badge";
+
 import { DocumentMenu } from "./document-menu";
 import { RoleBadge } from "./role-badge";
 import { Doc } from "../../../convex/_generated/dataModel";
@@ -32,14 +34,22 @@ export const DocumentRow = ({ document }: DocumentRowProps) => {
             </TableCell>
             <TableCell className="text-muted-foreground hidden md:flex items-center gap-2">
                 {document.role ? (
-                    <RoleBadge role={document.role} />
+                    <div className="flex items-center gap-2">
+                        <Badge
+                            variant="secondary"
+                            className="bg-[#007AFF]/10 text-[#312ECB] font-medium hover:bg-[#007AFF]/20 cursor-default"
+                        >
+                            Shared
+                        </Badge>
+                        <RoleBadge role={document.role} />
+                    </div>
                 ) : (
-                    <>
-                        {document.organizationId
-                            ? <Building2Icon className="size-4" />
-                            : <CircleUser className="size-4" />}
-                        {document.organizationId ? "Organization" : "Personal"}
-                    </>
+                    <Badge
+                        variant="default"
+                        className="bg-[#007AFF]/10 text-[#312ECB] font-medium hover:bg-[#007AFF]/20 cursor-default border-none shadow-none"
+                    >
+                        Personal
+                    </Badge>
                 )}
             </TableCell>
             <TableCell className="text-muted-foreground hidden md:table-cell">

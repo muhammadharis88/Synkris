@@ -416,6 +416,15 @@ export const Navbar = ({ data }: NavbarProps) => {
                 >
                     <Clock className="size-5" />
                 </button>
+                {/* Chat button */}
+                <button
+                    type="button"
+                    onClick={() => setChatOpen(!chatOpen)}
+                    title="Chat"
+                    className="p-1.5 rounded hover:bg-muted transition"
+                >
+                    <MessageSquare className="size-5" />
+                </button>
                 <ShareDialog documentId={data._id}>
                     <Button className="h-9 px-4 py-2 text-sm font-medium transition">
                         Share

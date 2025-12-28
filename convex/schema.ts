@@ -53,4 +53,14 @@ export default defineSchema({
     })
         .index("by_document", ["documentId"])
         .index("by_document_position", ["documentId", "position"]),
+    messages: defineTable({
+        documentId: v.id("documents"),
+        userId: v.string(),
+        userName: v.string(),
+        userAvatar: v.optional(v.string()),
+        content: v.string(),
+        timestamp: v.number(),
+    })
+        .index("by_document", ["documentId"])
+        .index("by_document_timestamp", ["documentId", "timestamp"]),
 });

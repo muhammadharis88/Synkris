@@ -13,8 +13,10 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as auth from "../auth.js";
 import type * as documents from "../documents.js";
 import type * as lockedParagraphs from "../lockedParagraphs.js";
+import type * as messages from "../messages.js";
 import type * as shares from "../shares.js";
 import type * as textVersions from "../textVersions.js";
 import type * as users from "../users.js";
@@ -28,8 +30,10 @@ import type * as users from "../users.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  auth: typeof auth;
   documents: typeof documents;
   lockedParagraphs: typeof lockedParagraphs;
+  messages: typeof messages;
   shares: typeof shares;
   textVersions: typeof textVersions;
   users: typeof users;

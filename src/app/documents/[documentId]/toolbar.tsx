@@ -29,12 +29,14 @@ import {
     SpellCheckIcon,
     UnderlineIcon,
     Undo2Icon,
-    UploadIcon
+    UploadIcon,
+    ShieldCheckIcon, // Add icon import
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
 import { useEditorStore } from "@/store/use-editor-store";
+import { PlagiarismDialog } from "./plagiarism-dialog"; // Import dialog
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -581,6 +583,7 @@ const ToolbarButton = ({
 
 export const Toolbar = () => {
     const { editor } = useEditorStore();
+    const [plagiarismOpen, setPlagiarismOpen] = useState(false); // State for dialog
 
     const sections: {
         label: string;
@@ -612,6 +615,12 @@ export const Toolbar = () => {
                         editor?.view.dom.setAttribute("spellcheck", current === "false" ? "true" : "false");
                     },
                 },
+                {
+                    label: "Plagiarism Check",
+                    icon: ShieldCheckIcon,
+                    onClick: () => setPlagiarismOpen(true),
+                    isActive: false
+                }
             ],
             [
                 {
@@ -680,6 +689,11 @@ export const Toolbar = () => {
             {sections[2].map((item) => (
                 <ToolbarButton key={item.label} {...item} />
             ))}
+            <PlagiarismDialog
+                open={plagiarismOpen}
+                onClose={() => setPlagiarismOpen(false)}
+                text={editor?.getText() || ""}
+            />
         </div>
     );
 };

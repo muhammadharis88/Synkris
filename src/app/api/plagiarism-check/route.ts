@@ -78,13 +78,12 @@ export async function POST(req: NextRequest) {
             );
         }
 
+
         // Parse checkPlag endpoint response format
-        // Response includes: plagPercent, uniquePercent, sources, details, totalQueries
         const plagPercent = data.plagPercent || 0;
         const uniquePercent = data.uniquePercent || 0;
         const sources = data.sources || [];
         const details = data.details || [];
-        const totalQueries = data.totalQueries || 0;
 
         // Determine if content is unique
         const isUnique = plagPercent === 0 || uniquePercent === 100;
@@ -92,14 +91,16 @@ export async function POST(req: NextRequest) {
         // Format the response
         return NextResponse.json({
             success: true,
-            score: plagPercent, // Use plagPercent directly as the score
+            score: plagPercent,
             analysis: isUnique
                 ? "Content appears to be unique!"
                 : `Found ${plagPercent}% plagiarism in ${sources.length} online source${sources.length !== 1 ? 's' : ''}.`,
-            details: details.slice(0, 5).map((detail: any) => ({
+            details: details.map((detail: any) => ({
                 source: detail.display?.url || "Unknown source",
                 title: detail.display?.url || "No title",
-                description: detail.display?.des || detail.query || ""
+                description: detail.display?.des || detail.query || "",
+                unique: detail.unique, // Include unique field for frontend filtering
+                percentage: detail.percentage || 0
             })),
             isUnique: isUnique,
             totalMatches: sources.length,

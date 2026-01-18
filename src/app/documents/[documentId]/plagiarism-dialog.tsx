@@ -26,6 +26,8 @@ interface SourceDetail {
     source: string;
     title: string;
     description: string;
+    unique?: boolean;
+    percentage?: number;
 }
 
 export const PlagiarismDialog = ({ open, onClose, text }: PlagiarismDialogProps) => {
@@ -58,12 +60,15 @@ export const PlagiarismDialog = ({ open, onClose, text }: PlagiarismDialogProps)
                 return;
             }
 
+            // Filter out unique sources (only show plagiarized content)
+            const plagiarizedSources = (data.details || []).filter((detail: SourceDetail) => detail.unique === false);
+
             setResult({
                 score: data.score,
                 analysis: data.analysis,
-                details: data.details || [],
+                details: plagiarizedSources,
                 isUnique: data.isUnique,
-                totalMatches: data.totalMatches
+                totalMatches: plagiarizedSources.length
             });
         } catch (error) {
             console.error("Plagiarism Check Error:", error);
@@ -163,9 +168,10 @@ export const PlagiarismDialog = ({ open, onClose, text }: PlagiarismDialogProps)
                                                                 {detail.title}
                                                             </h5>
                                                             {detail.description && (
-                                                                <p className="text-xs text-muted-foreground line-clamp-2 break-words overflow-hidden">
-                                                                    {detail.description}
-                                                                </p>
+                                                                <div
+                                                                    className="text-xs text-muted-foreground line-clamp-2 break-words overflow-hidden"
+                                                                    dangerouslySetInnerHTML={{ __html: detail.description }}
+                                                                />
                                                             )}
                                                             <a
                                                                 href={detail.source}

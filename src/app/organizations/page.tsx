@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useOrganizationList, useClerk } from "@clerk/nextjs";
 import { Plus } from "lucide-react";
 import Link from "next/link";
@@ -9,6 +11,17 @@ import { FullscreenLoader } from "@/components/fullscreen-loader";
 import { OrganizationCard } from "./organization-card";
 
 const OrganizationsPage = () => {
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const refresh = searchParams.get("refresh");
+
+    useEffect(() => {
+        if (refresh === "true") {
+            // Trigger a physical reload to ensure all state is cleared
+            window.location.href = "/organizations";
+        }
+    }, [refresh]);
+
     const { userMemberships, isLoaded } = useOrganizationList({
         userMemberships: {
             infinite: true,

@@ -47,8 +47,7 @@ export const DeleteOrganizationDialog = ({
             toast.success(
                 `Organization deleted successfully. ${result?.deletedCount || 0} document(s) removed.`
             );
-            router.push("/organizations");
-            router.refresh();
+            router.push("/organizations?refresh=true");
         } catch (error) {
             console.error("Error deleting organization:", error);
             toast.error("Failed to delete organization");

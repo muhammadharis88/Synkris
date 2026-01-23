@@ -37,8 +37,7 @@ export const LeaveOrganizationDialog = ({
         try {
             await user.leaveOrganization(organizationId);
             toast.success("Successfully left the organization");
-            router.push("/organizations");
-            router.refresh();
+            router.push("/organizations?refresh=true");
         } catch (error) {
             console.error("Error leaving organization:", error);
             toast.error("Failed to leave organization");

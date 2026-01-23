@@ -57,6 +57,7 @@ import { DocumentInput } from "./document-input";
 import { ShareDialog } from "@/components/share-dialog";
 import { eRoles, RoleIndicator } from "./role-indicator";
 import { AIDocumentGenerator } from "./ai-document-generator";
+import { AIDialog } from "./ai-dialog";
 import { ChatPanel } from "./chat-panel";
 import { useChatNotifications } from "./use-chat-notifications";
 import { Badge } from "@/components/ui/badge";
@@ -82,6 +83,11 @@ export const Navbar = ({ data }: NavbarProps) => {
     const [selectionTo, setSelectionTo] = useState<number>(0);
     const [showAIGenerator, setShowAIGenerator] = useState(false);
     const [chatOpen, setChatOpen] = useState(false);
+
+    const [aiDialogOpen, setAiDialogOpen] = useState(false);
+    const [aiDialogMode, setAiDialogMode] = useState<"edit" | "continue" | "expand">("continue");
+    const [aiContext, setAiContext] = useState("");
+    const [selectedText, setSelectedText] = useState("");
 
     // Get chat messages for unread count
     const messages = useQuery(api.messages.getMessages, { documentId: data._id });
@@ -114,6 +120,7 @@ export const Navbar = ({ data }: NavbarProps) => {
 
     // Fetch auth info to get user's role
     const authInfo = useQuery(api.documents.getAuthInfo, { id: data._id });
+    const isViewer = authInfo?.role === "viewer";
     const isOwner = data.ownerId === user?.id;
 
     const activeLock = useMemo(() => {
@@ -231,6 +238,80 @@ export const Navbar = ({ data }: NavbarProps) => {
         toast.success("AI-generated document inserted");
     };
 
+    // Helper to get surrounding context for AI
+    const getSurroundingContext = (maxChars: number = 500): string => {
+        if (!editor) return "";
+        const { from } = editor.state.selection;
+        const doc = editor.state.doc;
+
+        // Get text before cursor
+        const beforeStart = Math.max(0, from - maxChars);
+        const beforeText = doc.textBetween(beforeStart, from);
+
+        return beforeText.trim();
+    };
+
+    const handleContinueWriting = () => {
+        setAiDialogMode("continue");
+        const context = getSurroundingContext(800);
+        setAiContext(context);
+        setSelectedText("");
+        setAiDialogOpen(true);
+    };
+
+    const handleAskAI = () => {
+        const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+        const hasSelection = from !== to;
+
+        if (hasSelection) {
+            setAiDialogMode("edit");
+            const text = editor?.state.doc.textBetween(from, to) || "";
+            setSelectedText(text);
+            const context = getSurroundingContext();
+            setAiContext(context);
+            setAiDialogOpen(true);
+        } else {
+            toast.error("Please select some text first");
+        }
+    };
+
+    const handleExpandContent = () => {
+        const { from, to } = editor?.state.selection || { from: 0, to: 0 };
+        const hasSelection = from !== to;
+
+        if (hasSelection) {
+            setAiDialogMode("expand");
+            const text = editor?.state.doc.textBetween(from, to) || "";
+            setSelectedText(text);
+            const context = getSurroundingContext();
+            setAiContext(context);
+            setAiDialogOpen(true);
+        } else {
+            toast.error("Please select some text first");
+        }
+    };
+
+    const handleApplyAI = (content: string) => {
+        if (!editor) return;
+
+        if (aiDialogMode === "continue") {
+            // Insert at cursor position
+            editor
+                .chain()
+                .focus()
+                .insertContent(" " + content)
+                .run();
+        } else {
+            // Replace selected text
+            editor
+                .chain()
+                .focus()
+                .deleteSelection()
+                .insertContent(content)
+                .run();
+        }
+    };
+
     return (
         <nav className="flex items-center justify-between">
             <div className="flex gap-2 items-center">
@@ -244,200 +325,223 @@ export const Navbar = ({ data }: NavbarProps) => {
                         {authInfo?.role && (
                             <RoleIndicator role={authInfo.role as eRoles} isOwner={isOwner} />
                         )}
-                        <Menubar className="border-none bg-transparent shadow-none h-auto p-0">
-                            <MenubarMenu>
-                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
-                                    File
-                                </MenubarTrigger>
-                                <MenubarContent className="print:hidden">
-                                    <MenubarSub>
-                                        <MenubarSubTrigger>
-                                            <FileIcon className="size-4 mr-2" />
-                                            Save
-                                        </MenubarSubTrigger>
-                                        <MenubarSubContent>
-                                            <MenubarItem onClick={onSaveJSON}>
-                                                <FileJsonIcon className="size-4 mr-2" />
-                                                JSON
+                        {!isViewer && (
+                            <Menubar className="border-none bg-transparent shadow-none h-auto p-0">
+                                <MenubarMenu>
+                                    <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                        File
+                                    </MenubarTrigger>
+                                    <MenubarContent className="print:hidden">
+                                        <MenubarSub>
+                                            <MenubarSubTrigger>
+                                                <FileIcon className="size-4 mr-2" />
+                                                Save
+                                            </MenubarSubTrigger>
+                                            <MenubarSubContent>
+                                                <MenubarItem onClick={onSaveJSON}>
+                                                    <FileJsonIcon className="size-4 mr-2" />
+                                                    JSON
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => window.print()}>
+                                                    <BsFilePdf className="size-4 mr-2" />
+                                                    PDF
+                                                </MenubarItem>
+                                                <MenubarItem onClick={onSaveHTML}>
+                                                    <GlobeIcon className="size-4 mr-2" />
+                                                    HTML
+                                                </MenubarItem>
+                                                <MenubarItem onClick={onSaveText}>
+                                                    <FileText className="size-4 mr-2" />
+                                                    Text
+                                                </MenubarItem>
+                                            </MenubarSubContent>
+                                        </MenubarSub>
+                                        <MenubarItem onClick={onNewDocument}>
+                                            <FilePlusIcon className="size-4 mr-2" />
+                                            New Document
+                                        </MenubarItem>
+                                        <MenubarSeparator />
+                                        <RenameDialog documentId={data._id} initialTitle={data.title}>
+                                            <MenubarItem
+                                                onClick={(e) => e.stopPropagation()}
+                                                onSelect={(e) => e.preventDefault()}
+                                            >
+                                                <FilePenIcon className="size-4 mr-2" />
+                                                Rename
                                             </MenubarItem>
-                                            <MenubarItem onClick={() => window.print()}>
-                                                <BsFilePdf className="size-4 mr-2" />
-                                                PDF
+                                        </RenameDialog>
+                                        <RemoveDialog documentId={data._id}>
+                                            <MenubarItem
+                                                onClick={(e) => e.stopPropagation()}
+                                                onSelect={(e) => e.preventDefault()}
+                                            >
+                                                <TrashIcon className="size-4 mr-2" />
+                                                Remove
                                             </MenubarItem>
-                                            <MenubarItem onClick={onSaveHTML}>
-                                                <GlobeIcon className="size-4 mr-2" />
-                                                HTML
-                                            </MenubarItem>
-                                            <MenubarItem onClick={onSaveText}>
-                                                <FileText className="size-4 mr-2" />
+                                        </RemoveDialog>
+                                        <MenubarSeparator />
+                                        <MenubarItem onClick={() => window.print()}>
+                                            <PrinterIcon className="size-4 mr-2" />
+                                            Print <MenubarShortcut>Ctrl P</MenubarShortcut>
+                                        </MenubarItem>
+                                    </MenubarContent>
+                                </MenubarMenu>
+                                <MenubarMenu>
+                                    <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                        Edit
+                                    </MenubarTrigger>
+                                    <MenubarContent>
+                                        <MenubarItem onClick={() => editor?.chain().focus().undo().run()}>
+                                            <Undo2Icon className="size-4 mr-2" />
+                                            Undo <MenubarShortcut>Ctrl Z</MenubarShortcut>
+                                        </MenubarItem>
+                                        <MenubarItem onClick={() => editor?.chain().focus().redo().run()}>
+                                            <Redo2Icon className="size-4 mr-2" />
+                                            Redo <MenubarShortcut>Ctrl Y</MenubarShortcut>
+                                        </MenubarItem>
+                                    </MenubarContent>
+                                </MenubarMenu>
+                                <MenubarMenu>
+                                    <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                        Insert
+                                    </MenubarTrigger>
+                                    <MenubarContent>
+                                        <MenubarSub>
+                                            <MenubarSubTrigger>Table</MenubarSubTrigger>
+                                            <MenubarSubContent>
+                                                <MenubarItem onClick={() => insertTable({ rows: 1, cols: 1 })}>
+                                                    1 x 1
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => insertTable({ rows: 2, cols: 2 })}>
+                                                    2 x 2
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => insertTable({ rows: 3, cols: 3 })}>
+                                                    3 x 3
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => insertTable({ rows: 4, cols: 4 })}>
+                                                    4 x 4
+                                                </MenubarItem>
+                                            </MenubarSubContent>
+                                        </MenubarSub>
+                                    </MenubarContent>
+                                </MenubarMenu>
+                                <MenubarMenu>
+                                    <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                        Format
+                                    </MenubarTrigger>
+                                    <MenubarContent>
+                                        <MenubarSub>
+                                            <MenubarSubTrigger>
+                                                <TextIcon className="size-4 mr-2" />
                                                 Text
-                                            </MenubarItem>
-                                        </MenubarSubContent>
-                                    </MenubarSub>
-                                    <MenubarItem onClick={onNewDocument}>
-                                        <FilePlusIcon className="size-4 mr-2" />
-                                        New Document
-                                    </MenubarItem>
-                                    <MenubarSeparator />
-                                    <RenameDialog documentId={data._id} initialTitle={data.title}>
-                                        <MenubarItem
-                                            onClick={(e) => e.stopPropagation()}
-                                            onSelect={(e) => e.preventDefault()}
-                                        >
-                                            <FilePenIcon className="size-4 mr-2" />
-                                            Rename
+                                            </MenubarSubTrigger>
+                                            <MenubarSubContent>
+                                                <MenubarItem onClick={() => editor?.chain().focus().toggleBold().run()}>
+                                                    <BoldIcon className="size-4 mr-2" />
+                                                    Bold <MenubarShortcut>Ctrl B</MenubarShortcut>
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => editor?.chain().focus().toggleItalic().run()}>
+                                                    <ItalicIcon className="size-4 mr-2" />
+                                                    Italic <MenubarShortcut>Ctrl I</MenubarShortcut>
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => editor?.chain().focus().toggleUnderline().run()}>
+                                                    <UnderlineIcon className="size-4 mr-2" />
+                                                    Underline <MenubarShortcut>Ctrl U</MenubarShortcut>
+                                                </MenubarItem>
+                                                <MenubarItem onClick={() => editor?.chain().focus().toggleStrike().run()}>
+                                                    <StrikethroughIcon className="size-4 mr-2" />
+                                                    Strikethrough&nbsp;&nbsp; <MenubarShortcut>Ctrl S</MenubarShortcut>
+                                                </MenubarItem>
+                                            </MenubarSubContent>
+                                        </MenubarSub>
+                                        <MenubarItem onClick={() => editor?.chain().focus().unsetAllMarks().run()}>
+                                            <RemoveFormattingIcon className="size-4 mr-2" />
+                                            Clear Formatting
                                         </MenubarItem>
-                                    </RenameDialog>
-                                    <RemoveDialog documentId={data._id}>
-                                        <MenubarItem
-                                            onClick={(e) => e.stopPropagation()}
-                                            onSelect={(e) => e.preventDefault()}
-                                        >
-                                            <TrashIcon className="size-4 mr-2" />
-                                            Remove
+                                    </MenubarContent>
+                                </MenubarMenu>
+                                <MenubarMenu>
+                                    <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
+                                        AI Assistant
+                                    </MenubarTrigger>
+                                    <MenubarContent>
+                                        <MenubarItem onClick={() => setShowAIGenerator(true)}>
+                                            <Sparkles className="size-4 mr-2 text-purple-600" />
+                                            Generate Document
                                         </MenubarItem>
-                                    </RemoveDialog>
-                                    <MenubarSeparator />
-                                    <MenubarItem onClick={() => window.print()}>
-                                        <PrinterIcon className="size-4 mr-2" />
-                                        Print <MenubarShortcut>Ctrl P</MenubarShortcut>
-                                    </MenubarItem>
-                                </MenubarContent>
-                            </MenubarMenu>
-                            <MenubarMenu>
-                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
-                                    Edit
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    <MenubarItem onClick={() => editor?.chain().focus().undo().run()}>
-                                        <Undo2Icon className="size-4 mr-2" />
-                                        Undo <MenubarShortcut>Ctrl Z</MenubarShortcut>
-                                    </MenubarItem>
-                                    <MenubarItem onClick={() => editor?.chain().focus().redo().run()}>
-                                        <Redo2Icon className="size-4 mr-2" />
-                                        Redo <MenubarShortcut>Ctrl Y</MenubarShortcut>
-                                    </MenubarItem>
-                                </MenubarContent>
-                            </MenubarMenu>
-                            <MenubarMenu>
-                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
-                                    Insert
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    <MenubarSub>
-                                        <MenubarSubTrigger>Table</MenubarSubTrigger>
-                                        <MenubarSubContent>
-                                            <MenubarItem onClick={() => insertTable({ rows: 1, cols: 1 })}>
-                                                1 x 1
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => insertTable({ rows: 2, cols: 2 })}>
-                                                2 x 2
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => insertTable({ rows: 3, cols: 3 })}>
-                                                3 x 3
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => insertTable({ rows: 4, cols: 4 })}>
-                                                4 x 4
-                                            </MenubarItem>
-                                        </MenubarSubContent>
-                                    </MenubarSub>
-                                </MenubarContent>
-                            </MenubarMenu>
-                            <MenubarMenu>
-                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
-                                    Format
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    <MenubarSub>
-                                        <MenubarSubTrigger>
-                                            <TextIcon className="size-4 mr-2" />
-                                            Text
-                                        </MenubarSubTrigger>
-                                        <MenubarSubContent>
-                                            <MenubarItem onClick={() => editor?.chain().focus().toggleBold().run()}>
-                                                <BoldIcon className="size-4 mr-2" />
-                                                Bold <MenubarShortcut>Ctrl B</MenubarShortcut>
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => editor?.chain().focus().toggleItalic().run()}>
-                                                <ItalicIcon className="size-4 mr-2" />
-                                                Italic <MenubarShortcut>Ctrl I</MenubarShortcut>
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => editor?.chain().focus().toggleUnderline().run()}>
-                                                <UnderlineIcon className="size-4 mr-2" />
-                                                Underline <MenubarShortcut>Ctrl U</MenubarShortcut>
-                                            </MenubarItem>
-                                            <MenubarItem onClick={() => editor?.chain().focus().toggleStrike().run()}>
-                                                <StrikethroughIcon className="size-4 mr-2" />
-                                                Strikethrough&nbsp;&nbsp; <MenubarShortcut>Ctrl S</MenubarShortcut>
-                                            </MenubarItem>
-                                        </MenubarSubContent>
-                                    </MenubarSub>
-                                    <MenubarItem onClick={() => editor?.chain().focus().unsetAllMarks().run()}>
-                                        <RemoveFormattingIcon className="size-4 mr-2" />
-                                        Clear Formatting
-                                    </MenubarItem>
-                                </MenubarContent>
-                            </MenubarMenu>
-                            <MenubarMenu>
-                                <MenubarTrigger className="text-sm font-normal py-0.5 px-[7px] rounded-sm hover:bg-muted h-auto">
-                                    AI Assistant
-                                </MenubarTrigger>
-                                <MenubarContent>
-                                    <MenubarItem onClick={() => setShowAIGenerator(true)}>
-                                        <Sparkles className="size-4 mr-2 text-purple-600" />
-                                        Generate Document
-                                    </MenubarItem>
-                                    <MenubarItem onClick={() => toast.info("Select text and right-click to use Ask AI")}>
-                                        <Lightbulb className="size-4 mr-2 text-yellow-600" />
-                                        AI Help
-                                    </MenubarItem>
-                                </MenubarContent>
-                            </MenubarMenu>
-                        </Menubar>
+                                        <MenubarSeparator />
+                                        <MenubarItem onClick={handleContinueWriting}>
+                                            <Sparkles className="size-4 mr-2 text-green-600" />
+                                            Continue Writing
+                                        </MenubarItem>
+                                        <MenubarItem onClick={handleExpandContent}>
+                                            <Sparkles className="size-4 mr-2 text-blue-600" />
+                                            Expand Content
+                                        </MenubarItem>
+                                    </MenubarContent>
+                                </MenubarMenu>
+                            </Menubar>
+                        )}
                     </div>
                 </div>
             </div>
-            <div className="flex gap-3 items-center pl-6">
-                {/* Lock/Unlock button */}
-                <button
-                    type="button"
-                    onClick={handleLockUnlock}
-                    title={isLocked ? "Unlock paragraph" : "Lock paragraph"}
-                    className="p-1.5 rounded hover:bg-muted transition"
-                >
-                    {isLocked ? <Unlock className="size-5" /> : <Lock className="size-5" />}
-                </button>
-                {/* Version history button */}
-                <button
-                    type="button"
-                    onClick={handleOpenVersionHistory}
-                    title="Open version history"
-                    className="p-1.5 rounded hover:bg-muted transition"
-                >
-                    <Clock className="size-5" />
-                </button>
-                {/* Chat button */}
-                <button
-                    type="button"
-                    onClick={() => setChatOpen(!chatOpen)}
-                    title="Chat"
-                    className="p-1.5 rounded hover:bg-muted transition"
-                >
-                    <MessageSquare className="size-5" />
-                </button>
-                <ShareDialog documentId={data._id}>
-                    <Button className="h-9 px-4 py-2 text-sm font-medium transition">
-                        Share
-                    </Button>
-                </ShareDialog>
-                <Avatars />
-                <Inbox />
-                <UserMenu />
-            </div>
+            {!isViewer ? (
+                <div className="flex gap-3 items-center pl-6">
+                    {/* Lock/Unlock button */}
+                    <button
+                        type="button"
+                        onClick={handleLockUnlock}
+                        title={isLocked ? "Unlock paragraph" : "Lock paragraph"}
+                        className="p-1.5 rounded hover:bg-muted transition"
+                    >
+                        {isLocked ? <Unlock className="size-5" /> : <Lock className="size-5" />}
+                    </button>
+                    {/* Version history button */}
+                    <button
+                        type="button"
+                        onClick={handleOpenVersionHistory}
+                        title="Open version history"
+                        className="p-1.5 rounded hover:bg-muted transition"
+                    >
+                        <Clock className="size-5" />
+                    </button>
+                    {/* Chat button */}
+                    <button
+                        type="button"
+                        onClick={() => setChatOpen(!chatOpen)}
+                        title="Chat"
+                        className="p-1.5 rounded hover:bg-muted transition"
+                    >
+                        <MessageSquare className="size-5" />
+                    </button>
+                    <ShareDialog documentId={data._id}>
+                        <Button className="h-9 px-4 py-2 text-sm font-medium transition">
+                            Share
+                        </Button>
+                    </ShareDialog>
+                    <Avatars />
+                    <Inbox />
+                    <UserMenu />
+                </div>
+            ) : (
+                <div className="flex gap-3 items-center pl-6">
+                    <Avatars />
+                    <Inbox />
+                    <UserMenu />
+                </div>
+            )}
             <AIDocumentGenerator
                 open={showAIGenerator}
                 onClose={() => setShowAIGenerator(false)}
                 onInsert={handleInsertAIDocument}
+            />
+            <AIDialog
+                open={aiDialogOpen}
+                onClose={() => setAiDialogOpen(false)}
+                onApply={handleApplyAI}
+                selectedText={selectedText}
+                mode={aiDialogMode}
+                context={aiContext}
             />
             <ChatPanel
                 documentId={data._id}

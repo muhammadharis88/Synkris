@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 export async function POST(req: NextRequest) {
     try {
-        const { prompt, selectedText, type } = await req.json();
+        const { prompt, selectedText, type, context } = await req.json();
 
         // Validation
         if (!prompt || typeof prompt !== "string") {
@@ -46,6 +46,27 @@ Example of desired compact format:
 <h1>Title</h1><p>Introduction paragraph.</p><h2>Section</h2><p>Content here.</p><ul><li>Item 1</li><li>Item 2</li></ul>
 
 Now generate the document:`;
+        } else if (type === "continue") {
+            // Continue writing from where the user left off
+            const contextText = context ? `\n\nContext (what has been written so far):\n${context}\n\n` : "";
+            fullPrompt = `${prompt}${contextText}
+IMPORTANT: Continue writing naturally from where the text left off. Provide ONLY the continuation text as plain text. Do not repeat the existing content. Do not use HTML tags, markdown formatting, or code blocks. Match the tone and style of the existing content.`;
+        } else if (type === "expand") {
+            // Expand on selected text by adding more content
+            const contextText = context ? `\n\nSurrounding context:\n${context}\n\n` : "";
+            fullPrompt = `${prompt}${contextText}
+Text to expand:
+${selectedText}
+
+IMPORTANT: Provide additional content that expands on the selected text. Add more details, examples, or explanations. Provide ONLY the new expanded text as plain text. Do not use HTML tags, markdown formatting, or code blocks. Match the tone and style of the existing content.`;
+        } else if (type === "complete") {
+            // Complete a partial sentence or thought
+            const contextText = context ? `\n\nContext:\n${context}\n\n` : "";
+            fullPrompt = `${prompt}${contextText}
+Incomplete text:
+${selectedText}
+
+IMPORTANT: Complete this sentence or thought naturally. Provide ONLY the completion text as plain text. Do not repeat the incomplete text. Do not use HTML tags, markdown formatting, or code blocks.`;
         } else {
             fullPrompt = prompt;
         }
@@ -120,7 +141,7 @@ Now generate the document:`;
             text = text.replace(/^```\s*/g, '');
 
             // For edit mode, also remove any HTML tags (keep only text content)
-            if (type === "edit") {
+            if (type === "edit" || type === "continue" || type === "expand" || type === "complete") {
                 // Remove any remaining inline code markers
                 text = text.replace(/`([^`]+)`/g, '$1');
                 // Remove HTML tags if present (keep only text content)

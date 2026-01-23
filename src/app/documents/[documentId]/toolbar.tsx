@@ -32,6 +32,9 @@ import {
     UploadIcon,
     ShieldCheckIcon, // Add icon import
 } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "../../../../convex/_generated/api";
+import { Id } from "../../../../convex/_generated/dataModel";
 
 import { cn } from "@/lib/utils";
 import { Separator } from "@/components/ui/separator";
@@ -52,6 +55,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { eRoles } from "./role-indicator";
 
 const LineHeightButton = () => {
 
@@ -581,8 +585,15 @@ const ToolbarButton = ({
     )
 }
 
-export const Toolbar = () => {
+interface ToolbarProps {
+    documentId: Id<"documents">;
+}
+
+export const Toolbar = ({ documentId }: ToolbarProps) => {
     const { editor } = useEditorStore();
+    const authInfo = useQuery(api.documents.getAuthInfo, { id: documentId });
+    const isViewer = authInfo?.role === eRoles.Viewer;
+
     const [plagiarismOpen, setPlagiarismOpen] = useState(false); // State for dialog
 
     const sections: {
@@ -664,7 +675,10 @@ export const Toolbar = () => {
         ];
 
     return (
-        <div className="bg-[#f1f4f9] px-2.5 py-0.5 rounded-[24px] min-h-[40px] flex items-center gap-x-0.5 overflow-x-auto">
+        <div className={cn(
+            "bg-[#f1f4f9] px-2.5 py-0.5 rounded-[24px] min-h-[40px] flex items-center gap-x-0.5 overflow-x-auto",
+            isViewer && "pointer-events-none opacity-50"
+        )}>
             {sections[0].map((item) => (
                 <ToolbarButton key={item.label} {...item} />
             ))}

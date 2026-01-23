@@ -77,7 +77,7 @@ export const Editor = ({ initialContent, documentId, onOpenVersionHistory }: Edi
   }, [lockedParagraphsQuery]);
 
   const authInfo = useQuery(api.documents.getAuthInfo, { id: documentId });
-  const isEditable = authInfo?.role === "editor";
+  const isEditable = authInfo?.role !== "viewer";
 
   const editorInstance = useEditor({
     immediatelyRender: false,

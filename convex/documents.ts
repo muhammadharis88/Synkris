@@ -84,16 +84,6 @@ export const get = query({
             | string
             | undefined;
 
-        // Search within organization
-        if (search && organizationId) {
-            return await ctx.db
-                .query("documents")
-                .withSearchIndex("search_title", (q) =>
-                    q.search("title", search).eq("organizationId", organizationId)
-                )
-                .paginate(paginationOpts)
-        }
-
         // Personal Search
         if (search) {
             return await ctx.db
@@ -101,31 +91,16 @@ export const get = query({
                 .withSearchIndex("search_title", (q) =>
                     q.search("title", search).eq("ownerId", user.subject)
                 )
+                .filter((q) => q.eq(q.field("organizationId"), undefined))
                 .paginate(paginationOpts)
         }
 
-        // All docs inside organization
-        if (organizationId) {
-            return await ctx.db
-                .query("documents")
-                .withIndex("by_organization_id", (q) => q.eq("organizationId", organizationId))
-                .paginate(paginationOpts);
-        }
-
-        // All personal docs
-        const personalDocs = await ctx.db
+        // All personal docs (exclude organization docs)
+        return await ctx.db
             .query("documents")
             .withIndex("by_owner_id", (q) => q.eq("ownerId", user.subject))
+            .filter((q) => q.eq(q.field("organizationId"), undefined))
             .paginate(paginationOpts);
-
-        // Shared docs
-        // We can't easily paginate mixed sources, so for now let's just return personal docs
-        // and maybe add a separate query for shared docs or handle it differently.
-        // But the requirement implies we might want to see them.
-        // For now, let's stick to personal docs here and create a separate query for shared docs if needed,
-        // or just rely on the "Shared with me" page which will use a different query.
-
-        return personalDocs;
     },
 });
 

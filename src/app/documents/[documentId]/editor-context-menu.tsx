@@ -40,6 +40,8 @@ export const EditorContextMenu = ({
     const [hasTextSelection, setHasTextSelection] = useState(false);
     const [selectedText, setSelectedText] = useState("");
     const [showAIDialog, setShowAIDialog] = useState(false);
+    const [aiDialogMode, setAiDialogMode] = useState<"edit" | "continue" | "expand">("edit");
+    const [aiContext, setAiContext] = useState("");
 
     // Update selection position when editor selection changes
     useEffect(() => {
@@ -224,8 +226,40 @@ export const EditorContextMenu = ({
         }
     };
 
+    // Helper to get surrounding context for AI
+    const getSurroundingContext = (maxChars: number = 500): string => {
+        if (!editor) return "";
+        const { from } = editor.state.selection;
+        const doc = editor.state.doc;
+
+        // Get text before cursor
+        const beforeStart = Math.max(0, from - maxChars);
+        const beforeText = doc.textBetween(beforeStart, from);
+
+        return beforeText.trim();
+    };
+
     const handleAskAI = () => {
         if (hasTextSelection) {
+            setAiDialogMode("edit");
+            const context = getSurroundingContext();
+            setAiContext(context);
+            setShowAIDialog(true);
+        }
+    };
+
+    const handleContinueWriting = () => {
+        setAiDialogMode("continue");
+        const context = getSurroundingContext(800);
+        setAiContext(context);
+        setShowAIDialog(true);
+    };
+
+    const handleExpandContent = () => {
+        if (hasTextSelection) {
+            setAiDialogMode("expand");
+            const context = getSurroundingContext();
+            setAiContext(context);
             setShowAIDialog(true);
         }
     };
@@ -233,12 +267,22 @@ export const EditorContextMenu = ({
     const handleApplyAI = (content: string) => {
         if (!editor) return;
 
-        editor
-            .chain()
-            .focus()
-            .deleteSelection()
-            .insertContent(content)
-            .run();
+        if (aiDialogMode === "continue") {
+            // Insert at cursor position
+            editor
+                .chain()
+                .focus()
+                .insertContent(" " + content)
+                .run();
+        } else {
+            // Replace selected text
+            editor
+                .chain()
+                .focus()
+                .deleteSelection()
+                .insertContent(content)
+                .run();
+        }
 
         toast.success("AI changes applied");
     };
@@ -297,6 +341,19 @@ export const EditorContextMenu = ({
                             <Sparkles className="mr-2 h-4 w-4 text-purple-600" />
                             Ask AI
                         </ContextMenuItem>
+                        <ContextMenuItem onClick={handleExpandContent}>
+                            <Sparkles className="mr-2 h-4 w-4 text-blue-600" />
+                            Expand Content
+                        </ContextMenuItem>
+                    </>
+                )}
+                {!hasTextSelection && (
+                    <>
+                        <ContextMenuSeparator />
+                        <ContextMenuItem onClick={handleContinueWriting}>
+                            <Sparkles className="mr-2 h-4 w-4 text-green-600" />
+                            Continue Writing
+                        </ContextMenuItem>
                     </>
                 )}
             </ContextMenuContent>
@@ -305,6 +362,8 @@ export const EditorContextMenu = ({
                 onClose={() => setShowAIDialog(false)}
                 selectedText={selectedText}
                 onApply={handleApplyAI}
+                mode={aiDialogMode}
+                context={aiContext}
             />
         </ContextMenu>
     );

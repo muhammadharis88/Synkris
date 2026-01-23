@@ -20,21 +20,21 @@ export const Document = ({ preloadedDocument }: DocumentProps) => {
     const document = usePreloadedQuery(preloadedDocument);
     const { editor, versionHistoryOpen, versionHistoryPosition, openVersionHistory, closeVersionHistory } = useEditorStore();
 
-    return ( 
+    return (
         <Room>
             <div className="min-h-screen bg-[#FAFBFD]">
                 <div className="flex flex-col px-4 pt-2 gap-y-2 fixed top-0 left-0 right-0 z-10 bg-[#FAFBFD] print:hidden">
                     <Navbar data={document} />
-                    <Toolbar />
+                    <Toolbar documentId={document._id} />
                 </div>
-                <div 
+                <div
                     className={cn(
                         "pt-[114px] print:pt-0 transition-all duration-300",
                         versionHistoryOpen && "pr-96"
                     )}
                 >
-                    <Editor 
-                        initialContent={document.initialContent} 
+                    <Editor
+                        initialContent={document.initialContent}
                         documentId={document._id}
                         onOpenVersionHistory={openVersionHistory}
                     />
@@ -48,5 +48,5 @@ export const Document = ({ preloadedDocument }: DocumentProps) => {
                 />
             </div>
         </Room>
-     );
+    );
 }

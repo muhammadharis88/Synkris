@@ -21,9 +21,11 @@ interface AIDialogProps {
     onClose: () => void;
     selectedText?: string;
     onApply: (content: string) => void;
+    mode?: "edit" | "continue" | "expand";
+    context?: string; // Surrounding content for context
 }
 
-export const AIDialog = ({ open, onClose, selectedText, onApply }: AIDialogProps) => {
+export const AIDialog = ({ open, onClose, selectedText, onApply, mode = "edit", context }: AIDialogProps) => {
     const [prompt, setPrompt] = useState("");
     const [aiResponse, setAiResponse] = useState("");
     const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +48,8 @@ export const AIDialog = ({ open, onClose, selectedText, onApply }: AIDialogProps
                 body: JSON.stringify({
                     prompt: prompt.trim(),
                     selectedText: selectedText,
-                    type: "edit",
+                    type: mode,
+                    context: context,
                 }),
             });
 
@@ -80,14 +83,50 @@ export const AIDialog = ({ open, onClose, selectedText, onApply }: AIDialogProps
         onClose();
     };
 
-    // Quick action prompts
-    const quickPrompts = [
-        "Make this more professional",
-        "Simplify this",
-        "Expand on this",
-        "Fix grammar and spelling",
-        "Make it more concise",
-    ];
+    // Mode-specific quick action prompts
+    const getQuickPrompts = () => {
+        if (mode === "continue") {
+            return [
+                "Continue writing naturally",
+                "Add more details",
+                "Provide examples",
+                "Write a conclusion",
+                "Expand on this topic",
+            ];
+        } else if (mode === "expand") {
+            return [
+                "Add more details and examples",
+                "Explain this in depth",
+                "Provide supporting evidence",
+                "Add relevant examples",
+                "Elaborate further",
+            ];
+        } else {
+            // edit mode
+            return [
+                "Make this more professional",
+                "Simplify this",
+                "Expand on this",
+                "Fix grammar and spelling",
+                "Make it more concise",
+            ];
+        }
+    };
+
+    const quickPrompts = getQuickPrompts();
+
+    // Mode-specific titles and descriptions
+    const getDialogTitle = () => {
+        if (mode === "continue") return "Continue Writing";
+        if (mode === "expand") return "Expand Content";
+        return "Ask AI";
+    };
+
+    const getDialogDescription = () => {
+        if (mode === "continue") return "AI will continue writing from where you left off";
+        if (mode === "expand") return "AI will expand on the selected text with more details";
+        return "Tell AI what you want to do with the selected text";
+    };
 
     return (
         <Dialog open={open} onOpenChange={handleClose}>
@@ -95,20 +134,32 @@ export const AIDialog = ({ open, onClose, selectedText, onApply }: AIDialogProps
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Sparkles className="size-5 text-purple-600" />
-                        Ask AI
+                        {getDialogTitle()}
                     </DialogTitle>
                     <DialogDescription>
-                        Tell AI what you want to do with the selected text
+                        {getDialogDescription()}
                     </DialogDescription>
                 </DialogHeader>
 
                 <div className="space-y-4">
-                    {/* Selected Text (Read-only) */}
-                    {selectedText && (
+                    {/* Selected Text or Context (Read-only) */}
+                    {(selectedText || context) && mode !== "continue" && (
                         <div>
-                            <Label className="text-sm font-medium">Selected Text</Label>
+                            <Label className="text-sm font-medium">
+                                {mode === "expand" ? "Text to Expand" : "Selected Text"}
+                            </Label>
                             <div className="mt-1.5 p-3 bg-muted rounded-md text-sm max-h-32 overflow-y-auto">
-                                {selectedText}
+                                {selectedText || context}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Show context for continue mode */}
+                    {mode === "continue" && context && (
+                        <div>
+                            <Label className="text-sm font-medium">Current Content</Label>
+                            <div className="mt-1.5 p-3 bg-muted rounded-md text-sm max-h-32 overflow-y-auto">
+                                {context}
                             </div>
                         </div>
                     )}
